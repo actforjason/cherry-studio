@@ -478,7 +478,8 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
       copyTopicImage: vi.fn(),
       exportTopicImage: vi.fn(),
       locateMessage: vi.fn(),
-      scrollToBottom: vi.fn()
+      scrollToBottom: vi.fn(),
+      scrollToLatestUserMessage: vi.fn()
     }
 
     const unbindRuntime = value?.actions.bindRuntime?.(runtime)
@@ -586,7 +587,8 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
       copyTopicImage: vi.fn().mockResolvedValue(undefined),
       exportTopicImage: vi.fn(),
       locateMessage: vi.fn(),
-      scrollToBottom: vi.fn()
+      scrollToBottom: vi.fn(),
+      scrollToLatestUserMessage: vi.fn()
     }
 
     value?.actions.bindRuntime?.(runtime)

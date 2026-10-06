@@ -331,6 +331,14 @@ const MessageList = ({ enableSearch = false, scrollPositionKey }: MessageListPro
     messageListRef.current?.scrollToBottom()
   }, [])
 
+  const scrollToLatestUserMessage = useCallback(() => {
+    const userMessage = [...messages].reverse().find((message) => message.role === 'user')
+    if (userMessage) {
+      const groupKey = getMessageGroupKey(userMessage)
+      messageListRef.current?.scrollToUserQuestionTop?.(groupKey)
+    }
+  }, [messages])
+
   // Navigation buttons scroll through the virtua-aware runtime handle (smooth,
   // remeasure-safe) rather than a raw scrollTo on the virtualized scroller.
   const navigateToTop = useCallback(() => {
@@ -591,11 +599,13 @@ const MessageList = ({ enableSearch = false, scrollPositionKey }: MessageListPro
   )
   const runtimeActionsRef = useRef({
     scrollToBottom,
+    scrollToLatestUserMessage,
     scrollToMessageById,
     runTopicImageAction
   })
   runtimeActionsRef.current = {
     scrollToBottom,
+    scrollToLatestUserMessage,
     scrollToMessageById,
     runTopicImageAction
   }
@@ -751,6 +761,7 @@ const MessageList = ({ enableSearch = false, scrollPositionKey }: MessageListPro
   useEffect(() => {
     return bindRuntime?.({
       scrollToBottom: () => runtimeActionsRef.current.scrollToBottom(),
+      scrollToLatestUserMessage: () => runtimeActionsRef.current.scrollToLatestUserMessage(),
       locateMessage: (messageId) => runtimeActionsRef.current.scrollToMessageById(messageId),
       copyTopicImage: () => runtimeActionsRef.current.runTopicImageAction('copy'),
       exportTopicImage: () => runtimeActionsRef.current.runTopicImageAction('export')

@@ -215,7 +215,15 @@ describe('useChatRuntimeState', () => {
 
   it('reports a blocked stream open as not sent', async () => {
     mocks.sendTurn.mockResolvedValueOnce(false)
+    const scrollToLatestUserMessage = vi.fn()
     render(<RuntimeHost topicId="topic-1" />)
+    latestRuntime?.bindMessageListRuntime({
+      copyTopicImage: vi.fn(),
+      exportTopicImage: vi.fn(),
+      locateMessage: vi.fn(),
+      scrollToBottom: vi.fn(),
+      scrollToLatestUserMessage
+    })
 
     let sent: boolean | undefined
     await act(async () => {
@@ -223,27 +231,29 @@ describe('useChatRuntimeState', () => {
     })
 
     expect(sent).toBe(false)
+    expect(scrollToLatestUserMessage).not.toHaveBeenCalled()
   })
 
-  it('returns the viewport to bottom-follow after opening a conversation turn', async () => {
+  it('scrolls the latest user question to the top after opening a conversation turn', async () => {
     const requestAnimationFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
       callback(0)
       return 1
     })
-    const scrollToBottom = vi.fn()
+    const scrollToLatestUserMessage = vi.fn()
     render(<RuntimeHost topicId="topic-1" />)
     latestRuntime?.bindMessageListRuntime({
       copyTopicImage: vi.fn(),
       exportTopicImage: vi.fn(),
       locateMessage: vi.fn(),
-      scrollToBottom
+      scrollToBottom: vi.fn(),
+      scrollToLatestUserMessage
     })
 
     await act(async () => {
       await latestRuntime?.sendMessage('follow this response')
     })
 
-    expect(scrollToBottom).toHaveBeenCalledOnce()
+    expect(scrollToLatestUserMessage).toHaveBeenCalledOnce()
     requestAnimationFrame.mockRestore()
   })
 

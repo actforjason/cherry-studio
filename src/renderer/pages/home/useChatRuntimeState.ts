@@ -138,6 +138,9 @@ export function useChatRuntimeState({
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => messageListRuntimeRef.current?.scrollToBottom())
   }, [])
+  const scrollToLatestUserMessage = useCallback(() => {
+    requestAnimationFrame(() => messageListRuntimeRef.current?.scrollToLatestUserMessage())
+  }, [])
   const locateMessage = useCallback((messageId: string, highlight?: boolean) => {
     dispatchLocateMessage(messageListRuntimeRef.current, messageId, highlight)
   }, [])
@@ -480,6 +483,7 @@ export function useChatRuntimeState({
     cache,
     seedReservedMessages,
     scrollToBottom,
+    scrollToLatestUserMessage,
     startNewContextBlocked:
       isHistoryLoading ||
       isTopicStreamPending ||
@@ -505,14 +509,14 @@ export function useChatRuntimeState({
     async (text: string, options?: ChatTurnInput['options']) => {
       try {
         const sent = await send({ text, options })
-        if (sent) scrollToBottom()
+        if (sent) scrollToLatestUserMessage()
         return sent
       } catch (err) {
         logger.warn('failed to open conversation turn', err as Error)
         throw err
       }
     },
-    [scrollToBottom, send]
+    [scrollToLatestUserMessage, send]
   )
 
   return {
