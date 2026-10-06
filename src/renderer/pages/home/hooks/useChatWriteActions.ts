@@ -90,6 +90,7 @@ interface Params {
   cache: ReturnType<typeof useTopicMessagesCache>
   seedReservedMessages: (messages: CherryUIMessage[], options?: ReservedMessageSeedOptions) => Promise<void>
   scrollToBottom: () => void
+  scrollToLatestUserMessage?: () => void
   startNewContextBlocked: boolean
   assistant?: Assistant
   composerModelId?: UniqueModelId
@@ -114,6 +115,7 @@ export function useChatWriteActions(params: Params): Result {
     cache,
     seedReservedMessages,
     scrollToBottom,
+    scrollToLatestUserMessage,
     startNewContextBlocked,
     assistant,
     composerModelId
@@ -428,8 +430,18 @@ export function useChatWriteActions(params: Params): Result {
         activeExecutions: ack.activeExecutions,
         preserveActiveNode: ack.preserveActiveNode
       })
+      scrollToLatestUserMessage?.()
     },
-    [createSiblingTrigger, seedReservedMessages, refresh, setMessages, topic.id, topic.assistantId, uiMessages]
+    [
+      createSiblingTrigger,
+      seedReservedMessages,
+      refresh,
+      scrollToLatestUserMessage,
+      setMessages,
+      topic.id,
+      topic.assistantId,
+      uiMessages
+    ]
   )
 
   const handleResend = useCallback<ChatWriteActions['resend']>(

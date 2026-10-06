@@ -43,6 +43,7 @@ import { type FollowingReason, type ReadingReason, useViewportFollowState } from
 
 export interface MessageVirtualListHandle {
   scrollToBottom(): void
+  scrollToUserQuestionTop?(key: string): void
   scrollToTop(behavior?: ScrollBehavior): void
   scrollToKey(key: string, align?: 'start' | 'center' | 'end'): void
   /** Base item for adjacent navigation: the latest item while following, otherwise the current explicit target. */
@@ -1021,12 +1022,65 @@ export function useChatVirtualizerRuntime<T>({
 
   // ---- imperative API -------------------------------------------------
 
-  // Reading navigations can only land within [0, realBottom]; both the scroll
-  // itself and any distance measured against it must use this same bound.
-  const clampToReachable = useCallback(
-    (scroller: HTMLElement, target: number) =>
-      Math.min(getRealBottom(scroller, bottomFollowInsetRef.current), Math.max(0, target)),
-    []
+  const clampToReachable = useCallback((scroller: HTMLElement, target: number) => {
+    // 允许滚动到通过 freezeSpacer 垫高后的最大高度，而不是被原生短内容所截断
+    const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight)
+    return Math.min(maxScroll, Math.max(0, target))
+  }, [])
+
+  const scrollToUserQuestionTop = useCallback(
+    (key: string) => {
+      if (findDataIndexByKey(key) < 0) return
+      rememberNavigationBase(key)
+      const scroller = scrollerRef.current
+      const handle = vlistHandleRef.current
+      if (!scroller || !handle) return
+
+      const idx = findDataIndexByKey(key)
+      if (idx < 0) return
+
+      const target = Math.max(0, topPadding) + handle.getItemOffset(idx)
+
+      // 确保底部有足够的空间支持滚到最顶部
+      const neededBaseline = target + scroller.clientHeight * 1.5
+      freezeBaselineScrollHeightRef.current = Math.max(getNaturalScrollHeight(), neededBaseline)
+      maintainFreezeScrollRange()
+
+      readNavigationActiveRef.current = false
+      smoothScroll.cancel()
+
+      // 设置为 reading 状态
+      viewportFollow.enterReading('navigation')
+
+      // 直接定位
+      suppressNextAutoscrollConfirm()
+      scroller.scrollTop = target
+      lastScrollOffsetRef.current = target
+
+      // 精确锁定冻结锚点为当前用户问题元素，保证后续回答流式涌出时不产生任何视口漂移
+      const elements = contentRef.current?.querySelectorAll<HTMLElement>('[data-message-key]') ?? []
+      const element = Array.from(elements).find((el) => el.dataset.messageKey === key) ?? null
+
+      freezeAnchorRef.current = {
+        itemKey: key,
+        offsetInItem: 0,
+        element,
+        elementViewportTop: 0
+      }
+
+      updateScrollToBottomButtonVisibility()
+    },
+    [
+      findDataIndexByKey,
+      getNaturalScrollHeight,
+      maintainFreezeScrollRange,
+      rememberNavigationBase,
+      smoothScroll,
+      suppressNextAutoscrollConfirm,
+      topPadding,
+      updateScrollToBottomButtonVisibility,
+      viewportFollow
+    ]
   )
 
   const navigateForReading = useCallback(
@@ -1138,6 +1192,7 @@ export function useChatVirtualizerRuntime<T>({
     handleRef,
     (): MessageVirtualListHandle => ({
       scrollToBottom,
+      scrollToUserQuestionTop,
       scrollToTop,
       scrollToKey: (key, align = 'start') => {
         if (findDataIndexByKey(key) < 0) return
@@ -1188,6 +1243,7 @@ export function useChatVirtualizerRuntime<T>({
       scrollToElement,
       scrollToRange,
       scrollToTop,
+      scrollToUserQuestionTop,
       topPadding,
       viewportFollow.isFollowing
     ]

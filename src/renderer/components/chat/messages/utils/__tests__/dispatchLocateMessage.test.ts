@@ -8,6 +8,7 @@ import { dispatchLocateMessage } from '../dispatchLocateMessage'
 function createRuntime(): MessageListRuntime {
   return {
     scrollToBottom: vi.fn(),
+    scrollToLatestUserMessage: vi.fn(),
     locateMessage: vi.fn(),
     copyTopicImage: vi.fn(),
     exportTopicImage: vi.fn()

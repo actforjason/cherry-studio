@@ -469,6 +469,7 @@ describe('useAgentMessageListProviderValue', () => {
     const listLocateMessage = vi.fn()
     const listRuntime = {
       scrollToBottom: vi.fn(),
+      scrollToLatestUserMessage: vi.fn(),
       locateMessage: listLocateMessage,
       copyTopicImage: vi.fn(),
       exportTopicImage: vi.fn()
@@ -917,7 +918,8 @@ describe('useAgentMessageListProviderValue', () => {
       copyTopicImage: vi.fn().mockResolvedValue(undefined),
       exportTopicImage: vi.fn().mockResolvedValue(undefined),
       locateMessage: vi.fn(),
-      scrollToBottom: vi.fn()
+      scrollToBottom: vi.fn(),
+      scrollToLatestUserMessage: vi.fn()
     }
     const unbindVisible = visibleValue?.actions.bindRuntime?.(visibleRuntime)
     const request = requestAgentSessionImageAction('copy', { id: 'session-a', name: 'Session A' })
@@ -936,7 +938,8 @@ describe('useAgentMessageListProviderValue', () => {
       copyTopicImage: vi.fn().mockResolvedValue(undefined),
       exportTopicImage: vi.fn().mockResolvedValue(undefined),
       locateMessage: vi.fn(),
-      scrollToBottom: vi.fn()
+      scrollToBottom: vi.fn(),
+      scrollToLatestUserMessage: vi.fn()
     }
     const unbindCapture = captureValue?.actions.bindRuntime?.(captureRuntime)
 
