@@ -47,8 +47,8 @@ export const windowHandlers: IpcHandlersFor<typeof windowRequestSchemas> = {
     application.get('SubWindowService').setAlwaysOnTop(senderId, pinned),
 
   // window.main.* — act on the main-window singleton via MainWindowService, not the caller.
-  'window.main.set_minimum_size': async ({ width, height }) => {
-    application.get('MainWindowService').setMainWindowMinimumSize(width, height)
+  'window.main.set_minimum_size': async ({ width, height, targetWidth }) => {
+    application.get('MainWindowService').setMainWindowMinimumSize(width, height, targetWidth)
   },
   'window.main.reset_minimum_size': async () => {
     application.get('MainWindowService').resetMainWindowMinimumSize()

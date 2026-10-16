@@ -195,6 +195,37 @@ describe('AppShell', () => {
     })
   })
 
+  it('restores cached compact width when entering a compact route', async () => {
+    MockUseCacheUtils.setPersistCacheValue('ui.window.compact_width', 640)
+    render(<AppShell />)
+
+    await waitFor(() => {
+      expect(mocks.ipcRequest).toHaveBeenCalledWith('window.main.set_minimum_size', {
+        width: SECOND_MIN_WINDOW_WIDTH,
+        height: MIN_WINDOW_HEIGHT,
+        targetWidth: 640
+      })
+    })
+  })
+
+  it('records compact width on window resize when in a compact route', () => {
+    render(<AppShell />)
+
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 720 })
+    act(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+
+    expect(MockUseCacheUtils.getPersistCacheValue('ui.window.compact_width')).toBe(720)
+
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1200 })
+    act(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+
+    expect(MockUseCacheUtils.getPersistCacheValue('ui.window.compact_width')).toBeNull()
+  })
+
   it('opens global search from the shell-level shortcut', () => {
     render(<AppShell />)
 

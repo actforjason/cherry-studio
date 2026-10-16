@@ -110,7 +110,7 @@ describe('windowHandlers', () => {
     await windowHandlers['window.main.set_minimum_size']({ width: 800, height: 600 }, ctx('w1'))
     await windowHandlers['window.main.reset_minimum_size'](undefined, ctx('w1'))
     await windowHandlers['window.main.reload'](undefined, ctx('w1'))
-    expect(mainWindowService.setMainWindowMinimumSize).toHaveBeenCalledWith(800, 600)
+    expect(mainWindowService.setMainWindowMinimumSize).toHaveBeenCalledWith(800, 600, undefined)
     expect(mainWindowService.resetMainWindowMinimumSize).toHaveBeenCalledOnce()
     expect(mainWindowService.reloadMainWindow).toHaveBeenCalledOnce()
   })

@@ -420,6 +420,7 @@ export type RendererPersistCacheSchema = {
   'ui.global_search.recent_items': CacheValueTypes.GlobalSearchRecentEntry[]
   'ui.sidebar.docked_tabs': CacheValueTypes.Tab[]
   'ui.sidebar.width': number
+  'ui.window.compact_width': number | null
   'ui.chat.sidebar.width': number
   'ui.chat.artifact_pane.width': number
   // Right-pane width for the topic/session list tab. Separate from the artifact pane's key so a
@@ -487,6 +488,7 @@ export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
   'ui.global_search.recent_items': [],
   'ui.sidebar.docked_tabs': [],
   'ui.sidebar.width': 50, // keep in sync with SIDEBAR_ICON_WIDTH (renderer Sidebar/constants.ts)
+  'ui.window.compact_width': null,
   'ui.chat.sidebar.width': 275,
   'ui.chat.artifact_pane.width': 280,
   'ui.chat.resource_pane.width': 275, // keep in sync with 'ui.chat.sidebar.width'

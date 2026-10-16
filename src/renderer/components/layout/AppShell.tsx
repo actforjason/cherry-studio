@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
+import { usePersistCache } from '@data/hooks/useCache'
 import { useCommandHandler } from '@renderer/hooks/command'
 import { useTabs } from '@renderer/hooks/tab'
 import { useLeadingWindowControlsOverlay } from '@renderer/hooks/useLeadingWindowControlsOverlay'
@@ -10,7 +11,7 @@ import { isMac } from '@renderer/utils/platform'
 import { getDefaultRouteTitle, isPageTitledRoute } from '@renderer/utils/routeTitle'
 import { cn } from '@renderer/utils/style'
 import { isSettingsPath } from '@shared/data/types/settingsPath'
-import { MIN_WINDOW_HEIGHT, SECOND_MIN_WINDOW_WIDTH } from '@shared/utils/window'
+import { MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH, SECOND_MIN_WINDOW_WIDTH } from '@shared/utils/window'
 
 import Sidebar from '../app/Sidebar'
 import { createRecentRouteEntryFromTab, recordGlobalSearchRecentEntry } from '../GlobalSearch/globalSearchGroups'
@@ -124,14 +125,40 @@ export const AppShell = () => {
   // It must not live in the pages themselves: they sit inside <Activity>, whose
   // hide/show re-runs mount effects, so a per-page []-dep effect re-issues this
   // IPC pair on every tab switch.
+  const [compactWidth, setCompactWidth] = usePersistCache('ui.window.compact_width')
+  const compactWidthRef = useRef(compactWidth)
+  useEffect(() => {
+    compactWidthRef.current = compactWidth
+  }, [compactWidth])
+
   const activeTabAllowsCompactWidth = isCompactMinWidthRoute(activeTab?.url)
   useEffect(() => {
     if (!activeTabAllowsCompactWidth) return
-    void ipcApi.request('window.main.set_minimum_size', { width: SECOND_MIN_WINDOW_WIDTH, height: MIN_WINDOW_HEIGHT })
+    void ipcApi.request('window.main.set_minimum_size', {
+      width: SECOND_MIN_WINDOW_WIDTH,
+      height: MIN_WINDOW_HEIGHT,
+      ...(compactWidthRef.current ? { targetWidth: compactWidthRef.current } : {})
+    })
     return () => {
       void ipcApi.request('window.main.reset_minimum_size')
     }
   }, [activeTabAllowsCompactWidth])
+
+  useEffect(() => {
+    if (!activeTabAllowsCompactWidth) return
+
+    const handleResize = () => {
+      const currentWidth = window.innerWidth
+      if (currentWidth < MIN_WINDOW_WIDTH && currentWidth >= SECOND_MIN_WINDOW_WIDTH) {
+        setCompactWidth(currentWidth)
+      } else if (currentWidth >= MIN_WINDOW_WIDTH) {
+        setCompactWidth(null)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [activeTabAllowsCompactWidth, setCompactWidth])
 
   const recordRouteVisit = useCallback((tab: typeof activeTab, lastAccessTime = tab?.lastAccessTime) => {
     if (!tab) return

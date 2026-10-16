@@ -43,7 +43,7 @@ export const windowRequestSchemas = {
   // window.main.* — DIRECTED at the main-window singleton (handler resolves it via
   // MainWindowService, ignoring the caller), not the sender's own window.
   'window.main.set_minimum_size': defineRoute({
-    input: z.object({ width: z.number(), height: z.number() }),
+    input: z.object({ width: z.number(), height: z.number(), targetWidth: z.number().optional() }),
     output: z.void()
   }),
   'window.main.reset_minimum_size': defineRoute({ input: z.void(), output: z.void() }),

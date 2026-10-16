@@ -208,8 +208,13 @@ export class MainWindowService extends BaseService {
   }
 
   /** Set the main window's minimum size (window.main.set_minimum_size). */
-  public setMainWindowMinimumSize(width: number, height: number): void {
-    this.requireMainWindow().setMinimumSize(width, height)
+  public setMainWindowMinimumSize(width: number, height: number, targetWidth?: number): void {
+    const mainWindow = this.requireMainWindow()
+    mainWindow.setMinimumSize(width, height)
+    if (!mainWindow.isMaximized() && targetWidth && targetWidth >= width && targetWidth < MIN_WINDOW_WIDTH) {
+      const [, currentHeight] = mainWindow.getSize() ?? [width, height]
+      mainWindow.setSize(targetWidth, currentHeight)
+    }
   }
 
   /** Reset the main window's minimum size, growing it back if it shrank below the floor. */
