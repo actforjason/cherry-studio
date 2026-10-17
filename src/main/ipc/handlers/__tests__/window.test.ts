@@ -1,3 +1,4 @@
+import { screen } from 'electron'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { appGetMock } = vi.hoisted(() => ({
@@ -113,5 +114,33 @@ describe('windowHandlers', () => {
     expect(mainWindowService.setMainWindowMinimumSize).toHaveBeenCalledWith(800, 600, undefined)
     expect(mainWindowService.resetMainWindowMinimumSize).toHaveBeenCalledOnce()
     expect(mainWindowService.reloadMainWindow).toHaveBeenCalledOnce()
+  })
+
+  it('window.get_cursor_position returns relative and screen coordinates', async () => {
+    vi.mocked(screen.getCursorScreenPoint).mockReturnValue({ x: 105, y: 150 })
+    windowManager.getWindow.mockReturnValue({
+      getContentBounds: () => ({ x: 100, y: 100, width: 800, height: 600 })
+    })
+
+    const result = await windowHandlers['window.get_cursor_position'](undefined, ctx('w1'))
+    expect(result).toEqual({ x: 5, y: 50, screenX: 105, screenY: 150 })
+  })
+
+  it('window.get_cursor_position falls back when senderId or window is absent', async () => {
+    vi.mocked(screen.getCursorScreenPoint).mockReturnValue({ x: 105, y: 150 })
+    expect(await windowHandlers['window.get_cursor_position'](undefined, ctx(null))).toEqual({
+      x: -1,
+      y: -1,
+      screenX: 105,
+      screenY: 150
+    })
+
+    windowManager.getWindow.mockReturnValue(undefined)
+    expect(await windowHandlers['window.get_cursor_position'](undefined, ctx('missing'))).toEqual({
+      x: -1,
+      y: -1,
+      screenX: 105,
+      screenY: 150
+    })
   })
 })

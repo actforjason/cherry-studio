@@ -35,6 +35,16 @@ export const windowRequestSchemas = {
   // The init data WindowManager stored for the caller window; its shape varies per
   // window type, so it is opaque (unknown) and the consumer casts (see useWindowInitData).
   'window.get_init_data': defineRoute({ input: z.void(), output: z.unknown() }),
+  // Queries cursor position relative to window content and global screen coordinates.
+  'window.get_cursor_position': defineRoute({
+    input: z.void(),
+    output: z.object({
+      x: z.number(),
+      y: z.number(),
+      screenX: z.number(),
+      screenY: z.number()
+    })
+  }),
   // window.sub.* — the caller sub-window pins itself. The handler re-checks that
   // ctx.senderId resolves to a SubWindow-type window (main window is rejected) and
   // returns whether the pin was applied.

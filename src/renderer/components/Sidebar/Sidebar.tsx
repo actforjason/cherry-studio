@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useLeadingWindowControlsOverlay } from '@renderer/hooks/useLeadingWindowControlsOverlay'
 import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
+import { ipcApi } from '@renderer/ipc'
 import { isMac } from '@renderer/utils/platform'
 import { cn } from '@renderer/utils/style'
 
@@ -79,7 +80,13 @@ export function Sidebar({
     hoverTimeout.current = setTimeout(handleDismiss, 300)
   }, [clearHoverDismiss, handleDismiss])
 
-  useEffect(() => clearHoverDismiss, [clearHoverDismiss])
+  useEffect(() => {
+    window.addEventListener('blur', clearHoverDismiss)
+    return () => {
+      window.removeEventListener('blur', clearHoverDismiss)
+      clearHoverDismiss()
+    }
+  }, [clearHoverDismiss])
 
   const handleContextMenuOpenChange = useCallback(
     (open: boolean) => {
@@ -184,14 +191,22 @@ export function Sidebar({
     return (
       <div ref={sidebarRef} className="relative h-full w-2 shrink-0">
         <div
-          className="absolute inset-y-0 left-0 z-50 w-4 [-webkit-app-region:no-drag]"
+          className="absolute inset-y-0 left-0 z-50 w-2 [-webkit-app-region:no-drag]"
           onMouseEnter={() => {
-            if (hoverTimeout.current) clearTimeout(hoverTimeout.current)
-            hoverTimeout.current = setTimeout(() => onHoverChange?.(true), 200)
+            clearHoverDismiss()
+            hoverTimeout.current = setTimeout(async () => {
+              try {
+                const pos = await ipcApi.request('window.get_cursor_position')
+                if (pos && (pos.x < 0 || pos.x > 8 || pos.y < 0 || pos.y > window.innerHeight)) {
+                  return
+                }
+              } catch {
+                // IPC fallback for testing environments
+              }
+              onHoverChange?.(true)
+            }, 300)
           }}
-          onMouseLeave={() => {
-            if (hoverTimeout.current) clearTimeout(hoverTimeout.current)
-          }}>
+          onMouseLeave={clearHoverDismiss}>
           <div
             onMouseDown={(event) => {
               onHoverChange?.(false)

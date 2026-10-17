@@ -1,3 +1,5 @@
+import { screen } from 'electron'
+
 import { application } from '@application'
 import type { windowRequestSchemas } from '@shared/ipc/schemas/window'
 import type { IpcHandlersFor } from '@shared/ipc/types'
@@ -41,6 +43,23 @@ export const windowHandlers: IpcHandlersFor<typeof windowRequestSchemas> = {
     senderId ? application.get('WindowManager').isFullScreen(senderId) : false,
   'window.get_init_data': async (_input, { senderId }) =>
     senderId ? application.get('WindowManager').getInitData(senderId) : null,
+  'window.get_cursor_position': async (_input, { senderId }) => {
+    const cursor = screen.getCursorScreenPoint()
+    if (!senderId) {
+      return { x: -1, y: -1, screenX: cursor.x, screenY: cursor.y }
+    }
+    const win = application.get('WindowManager').getWindow(senderId)
+    if (!win) {
+      return { x: -1, y: -1, screenX: cursor.x, screenY: cursor.y }
+    }
+    const bounds = win.getContentBounds()
+    return {
+      x: cursor.x - bounds.x,
+      y: cursor.y - bounds.y,
+      screenX: cursor.x,
+      screenY: cursor.y
+    }
+  },
   // Sub-window-only contract: reject unless the caller resolves to a SubWindow-type window
   // (a non-null senderId is insufficient — the main window must not pin itself).
   'window.sub.set_always_on_top': async (pinned, { senderId }) =>

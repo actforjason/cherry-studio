@@ -169,7 +169,8 @@ vi.mock('electron', async () => {
     },
     screen: {
       getPrimaryDisplay: vi.fn(),
-      getAllDisplays: vi.fn()
+      getAllDisplays: vi.fn(),
+      getCursorScreenPoint: vi.fn(() => ({ x: 0, y: 0 }))
     },
     Notification: vi.fn(),
     net: {
